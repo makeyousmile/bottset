@@ -9,7 +9,6 @@ import (
 	"strings"
 )
 
-
 func main() {
 	ctx, client := ConnectToDb()
 	db := client.Database("bot420")
@@ -20,8 +19,7 @@ func main() {
 	}
 
 	cityNames, catNames := SplitCollName(Collections)
-
-
+	log.Print(getMap(Collections)["Барановичи"])
 
 	bot, err := tgbotapi.NewBotAPI("1284532231:AAFDnFJGFS7IEpcgelRfGIgbEWW6az8FRnA")
 	if err != nil {
@@ -43,8 +41,6 @@ func main() {
 		if update.Message != nil {
 			//msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
 
-
-
 			switch update.Message.Command() {
 			case "start":
 
@@ -53,7 +49,6 @@ func main() {
 					row := tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData(city, city))
 					numericKeyboard.InlineKeyboard = append(numericKeyboard.InlineKeyboard, row)
 				}
-
 
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Выберите город")
 				msg.ReplyMarkup = numericKeyboard
@@ -84,37 +79,33 @@ func main() {
 
 		}
 
-
 	}
-
 
 }
 
-func SplitCollName(collections []string)  ([]string, []string){
-	var city  []string
+func SplitCollName(collections []string) ([]string, []string) {
+	var city []string
 	var cat []string
 
+	sort.Strings(collections)
 
-	for _, col := range collections{
+	for _, col := range collections {
 		names := strings.Split(col, ":")
 
-		if len(names) == 2{
+		if len(names) == 2 {
 			city = append(city, names[0])
 			cat = append(cat, names[1])
 		}
 
 	}
-	city = removeDuplicatesUnordered(city)
-	cat = removeDuplicatesUnordered(cat)
-	sort.Strings(city)
-	sort.Strings(cat)
+
 	return city, cat
 }
 func removeDuplicatesUnordered(elements []string) []string {
 	encountered := map[string]bool{}
 
 	// Create a map of all unique elements.
-	for v:= range elements {
+	for v := range elements {
 		encountered[elements[v]] = true
 	}
 
@@ -126,18 +117,23 @@ func removeDuplicatesUnordered(elements []string) []string {
 	return result
 }
 
-func getMap(collections []string) map[string][]string  {
-	var coll map[string][]string
+func getMap(collections []string) map[string][]string {
+	coll := make(map[string][]string)
 
 	cities, categories := SplitCollName(collections)
 
-	for i, city := range cities{
-		if categories[i] == categories[i+1]{
-			coll[city] = []string{categories[i]}
+	for i := 0; i < len(cities); i++ {
+		var buf []string
+		for n := i; cities[i] == cities[n]; n++ {
+			buf = append(buf, categories[n])
+			if n == len(cities)-1 {
+				break
+			}
+
 		}
-
+		i += len(buf)
+		coll[cities[i-len(buf)]] = buf
 	}
-
 
 	return coll
 }
